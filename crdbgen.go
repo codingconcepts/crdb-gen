@@ -14,6 +14,7 @@ import (
 
 func main() {
 	url := flag.String("url", "postgres://root@localhost:26257/defaultdb", "Connection URL, of the form: postgresql://[user[:passwd]@]host[:port]/[db][?parameters...]")
+	debug := flag.Bool("debug", false, "If present/true, will print the tables and columns in the database for debugging purposes, then exit")
 	flag.Parse()
 
 	if *url == "" {
@@ -32,11 +33,9 @@ func main() {
 		log.Fatalf("error fetching tables: %v", err)
 	}
 
-	for _, table := range tables {
-		fmt.Printf("%s\n", table.Name)
-		for _, column := range table.Columns {
-			fmt.Printf("\t%s (%s)\n", column.Name, column.DataType)
-		}
+	if *debug {
+		dumpTables(tables)
+		return
 	}
 }
 
@@ -88,4 +87,13 @@ func fetchColumns(pool *pgxpool.Pool, table *model.Table) ([]model.Column, error
 	}
 
 	return columns, nil
+}
+
+func dumpTables(tables []model.Table) {
+	for _, table := range tables {
+		fmt.Printf("%s\n", table.Name)
+		for _, column := range table.Columns {
+			fmt.Printf("\t%s (%s)\n", column.Name, column.DataType)
+		}
+	}
 }
